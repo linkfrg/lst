@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lst"
+version = "0.1"
+description = "Linkfrg's Shell Toolkit"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["libsass", "pulsectl", "PyGObject", "watchdog"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: POSIX :: Linux",
+]
+
+[project.urls]
+Homepage = "https://github.com/linkfrg/lst"
+Issues = "https://github.com/linkfrg/lst/issues"
+
+[project.scripts]
+lst = "lst.main:main"
