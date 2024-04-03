@@ -1,4 +1,4 @@
-from gi.repository import GObject, NM
+from gi.repository import GObject, NM, GLib
 from lst.services.base_service import BaseService
 
 STATE = {
@@ -18,11 +18,20 @@ STATE = {
 }
 
 
+def get_device(client: NM.Client, device_type: NM.DeviceType):
+    for d in client.get_devices():
+        if d.get_device_type() == device_type:
+            return d
+
+
 class WifiAccessPoint(BaseService):
     def __init__(self, point: NM.AccessPoint):
         self._point = point
         super().__init__()
-        self._point.connect('notify::strength', lambda *args: (self.notify('strength'), self.notify('icon-name')))
+        self._point.connect(
+            "notify::strength",
+            lambda *args: (self.notify("strength"), self.notify("icon-name")),
+        )
 
     @GObject.Property
     def bandwidth(self) -> int:
@@ -58,57 +67,60 @@ class WifiAccessPoint(BaseService):
     @GObject.Property
     def strength(self) -> int:
         return self._point.props.strength
-    
+
     @GObject.Property
     def icon_name(self) -> str:
         if self.strength > 80:
-            return 'network-wireless-signal-excellent-symbolic'
+            return "network-wireless-signal-excellent-symbolic"
         elif self.strength > 60:
-            return 'network-wireless-signal-good-symbolic'
+            return "network-wireless-signal-good-symbolic"
         elif self.strength > 40:
-            return 'network-wireless-signal-ok-symbolic'
+            return "network-wireless-signal-ok-symbolic"
         elif self.strength > 20:
-            return 'network-wireless-signal-weak-symbolic'
+            return "network-wireless-signal-weak-symbolic"
         elif self.strength > 0:
-            return 'network-wireless-signal-none-symbolic'
-        
+            return "network-wireless-signal-none-symbolic"
+
 
 class ActiveAccessPoint(WifiAccessPoint):
-    def __init__(self, client: NM.Client, device: NM.DeviceType.WIFI):
+    def __init__(self, client: NM.Client):
         self.__client = client
-        self.__device = device
         self.update()
         super().__init__(self._point)
 
     def update(self) -> None:
-        ap = self.__device.get_active_access_point()
-        if ap:
-            self._point = ap
+        self.__device = get_device(client=self.__client, device_type=NM.DeviceType.WIFI)
+        if self.__device:
+            ap = self.__device.get_active_access_point()
+            if ap:
+                self._point = ap
+            else:
+                self._point = NM.AccessPoint()
         else:
             self._point = NM.AccessPoint()
         self.notify_all()
 
     @GObject.Property
     def icon_name(self) -> str:
-        template = 'network-wireless-signal-{}-symbolic'
+        template = "network-wireless-signal-{}-symbolic"
         ac = self.__client.get_activating_connection()
         if ac:
             if ac.get_state() == NM.ActiveConnectionState.ACTIVATING:
-                return 'network-wireless-acquiring-symbolic'
-
+                return "network-wireless-acquiring-symbolic"
 
         if self.strength > 80:
-            return template.format('excellent')
+            return template.format("excellent")
         elif self.strength > 60:
-            return template.format('good')
+            return template.format("good")
         elif self.strength > 40:
-            return template.format('ok')
+            return template.format("ok")
         elif self.strength > 20:
-            return template.format('weak')
+            return template.format("weak")
         elif self.strength > 0:
-            return template.format('none')
-        
-        return 'network-wireless-offline-symbolic'
+            return template.format("none")
+
+        return "network-wireless-offline-symbolic"
+
 
 # TODO
 class Ethernet(BaseService):
@@ -117,27 +129,17 @@ class Ethernet(BaseService):
 
 
 class Wifi(BaseService):
-    def __init__(self, client: NM.Client, device: NM.DeviceType.WIFI):
+    def __init__(self, client: NM.Client):
         super().__init__()
         self.__client = client
-        self.__device = device
         self.__client.connect(
             "notify::wireless-enabled", lambda *args: self.notify_all()
         )
-        self.__client.connect('notify::activating-connection', lambda *args: self.ap.notify('icon-name'))
-        if self.__device:
-            self._ap = ActiveAccessPoint(self.__client, self.__device)
-            self.__device.connect(
-                "access-point-added", lambda *args: self.notify("access_points")
-            )
-            self.__device.connect(
-                "access-point-removed", lambda *args: self.notify("access_points")
-            )
-            self.__device.connect(
-                "notify::active-access-point",
-                lambda *args: self.__update_ap(),
-            )
-            self.__update_ap()
+        self.__client.connect(
+            "notify::activating-connection", lambda *args: self.ap.notify("icon-name")
+        )
+        self._ap = ActiveAccessPoint(self.__client)
+        self.update()
 
     @GObject.Property
     def access_points(self) -> list:
@@ -153,7 +155,7 @@ class Wifi(BaseService):
     @GObject.Property
     def state(self) -> str:
         return STATE.get(self.__device.get_state(), None)
-    
+
     @GObject.Property
     def enabled(self) -> bool:
         return self.__client.wireless_get_enabled()
@@ -170,34 +172,45 @@ class Wifi(BaseService):
         self.notify("ap")
 
     def scan(self) -> None:
-        if self.__device and self.state != 'unavailable':
+        if self.__device and self.state != "unavailable":
             self.__device.request_scan_async(
                 None, lambda x, result: self.__device.request_scan_finish(result)
             )
+
+    def update(self) -> None:
+        self.__device = get_device(client=self.__client, device_type=NM.DeviceType.WIFI)
+        if self.__device:
+            self.__device.connect(
+                "access-point-added", lambda *args: self.notify("access_points")
+            )
+            self.__device.connect(
+                "access-point-removed", lambda *args: self.notify("access_points")
+            )
+            self.__device.connect(
+                "notify::active-access-point",
+                lambda *args: self.__update_ap(),
+            )
+            self.__update_ap()
+        self.notify_all()
 
 
 class NetworkService(BaseService):
     def __init__(self):
         super().__init__()
-
         self.__client = NM.Client.new(None)
-        self.__sync()
+        self.__client.connect(
+            "notify::all-devices",
+            lambda *args: GLib.timeout_add_seconds(2, self.__sync),
+        )
+
+        self._wifi = Wifi(self.__client)
 
     @GObject.Property
     def wifi(self) -> Wifi:
         return self._wifi
 
-    def __get_device(self, device_type: NM.DeviceType):
-        for d in self.__client.get_devices():
-            if d.get_device_type() == device_type:
-                return d
-
     def __sync(self) -> None:
-        wifi_device = self.__get_device(device_type=NM.DeviceType.WIFI)
-        self._wifi = Wifi(
-            client=self.__client,
-            device=wifi_device,
-        )
+        self._wifi.update()
 
 
 network = NetworkService()
