@@ -5,7 +5,7 @@ from lst.widgets.widget import Widget
 class Label(Gtk.Label, Widget):
     __gproperties__ = {**Widget.gproperties}
 
-    def __init__(self, label: str, use_markup: bool = False, **kwargs):
+    def __init__(self, label: str = None, use_markup: bool = False, **kwargs):
         Gtk.Label.__init__(self)
         Widget.__init__(self, **kwargs)
         self.set_label(label)
