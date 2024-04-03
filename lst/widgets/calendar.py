@@ -29,5 +29,8 @@ class Calendar(Gtk.Calendar, Widget):
         if day:
             self.select_day(day)
 
-        if month and year:
-            self.select_month(month, year)
+        if month:
+            self.select_month(month, self.get_date()[0])
+
+        if year:
+            self.select_month(self.get_date()[1], year)
