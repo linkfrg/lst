@@ -25,10 +25,10 @@ class Entry(Gtk.Entry, Widget):
             self.set_placeholder_text(placeholder)
 
         if on_accept:
-            self.connect("activate", lambda x: on_accept(self, self.get_text()))
+            self.connect("activate", lambda x: on_accept(x))
 
         if on_change:
-            self.connect("notify::text", lambda x, y: on_change(self, self.get_text()))
+            self.connect("notify::text", lambda x, y: on_change(x))
 
     @GObject.Property
     def on_accept(self) -> callable:
