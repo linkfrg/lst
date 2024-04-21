@@ -3,8 +3,8 @@ import os
 import threading
 import socket
 from gi.repository import GObject
-from lst.services.base_service import BaseService
-from typing import Union
+from lst.base_service import BaseService
+from typing import List
 
 HYPRLAND_INSTANCE_SIGNATURE = os.getenv("HYPRLAND_INSTANCE_SIGNATURE")
 
@@ -25,19 +25,19 @@ class HyprlandService(BaseService):
         threading.Thread(target=self.__monitor_socket, daemon=True).start()
 
     @GObject.Property
-    def workspaces(self):
+    def workspaces(self) -> List[dict]:
         return self._workspaces
 
     @GObject.Property
-    def active_workspace(self):
+    def active_workspace(self) -> dict:
         return self._active_workspace
 
     @GObject.Property
-    def kb_layout(self):
+    def kb_layout(self) -> str:
         return self._kb_layout
 
     @GObject.Property
-    def active_window(self):
+    def active_window(self) -> str:
         return self._active_window
 
     def __monitor_socket(self) -> None:
@@ -84,7 +84,7 @@ class HyprlandService(BaseService):
         for kb in json.loads(self.send_command("j/devices"))["keyboards"]:
             self.send_command(f"switchxkblayout {kb['name']} next")
 
-    def switch_to_workspace(self, workspace_id: Union[str, int]) -> None:
+    def switch_to_workspace(self, workspace_id: int) -> None:
         self.send_command(f"dispatch workspace {workspace_id}")
 
 

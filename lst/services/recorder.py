@@ -1,5 +1,5 @@
 from gi.repository import GObject, Gst, GLib
-from lst.services.base_service import BaseService
+from lst.base_service import BaseService
 from lst.dbus import DbusClient
 from lst.app import app
 import datetime

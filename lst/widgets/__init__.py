@@ -16,6 +16,10 @@ from lst.widgets.toggle_button import ToggleButton
 from lst.widgets.regular_window import RegularWindow
 from lst.widgets.radio_button import RadioButton
 from lst.widgets.file_chooser_button import FileChooserButton
+from lst.widgets.grid import Grid
+from lst.widgets.menu import Menu
+from lst.widgets.menuitem import MenuItem
+from lst.widgets.popup_window import PopupWindow
 
 class Widget:
     Window = Window
@@ -36,3 +40,7 @@ class Widget:
     RegularWindow = RegularWindow
     RadioButton = RadioButton
     FileChooserButton = FileChooserButton
+    Grid = Grid
+    Menu = Menu
+    MenuItem = MenuItem
+    PopupWindow = PopupWindow

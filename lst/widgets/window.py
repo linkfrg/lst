@@ -24,6 +24,7 @@ ANCHOR = {
     "top": GtkLayerShell.Edge.TOP,
 }
 
+
 class Window(Gtk.Window, Widget):
     __gproperties__ = {**Widget.gproperties}
 
@@ -37,14 +38,10 @@ class Window(Gtk.Window, Widget):
         layer: str = "top",
         kb_mode: str = "none",
         popup: bool = False,
-        is_open: bool = True,
-        width: int = 2,
-        height: int = 2,
-        **kwargs
+        **kwargs,
     ):
         Gtk.Window.__init__(self)
         GtkLayerShell.init_for_window(self)
-
 
         self._child = None
         self._anchor = None
@@ -54,7 +51,6 @@ class Window(Gtk.Window, Widget):
         self._kb_mode = None
         self._popup = None
         self._monitor = None
-        self._is_open = None
 
         self.child = child
         self.anchor = anchor
@@ -65,33 +61,15 @@ class Window(Gtk.Window, Widget):
         self.monitor = monitor
         self.popup = popup
 
-        self.set_size_request(width, height)
         app.add_window(namespace, self)
         self.connect("key-press-event", lambda x, event: self.__close_popup(event))
-        
-        Widget.__init__(self, **kwargs)
-        self.is_open = is_open
 
+        Widget.__init__(self, **kwargs)
 
     def __close_popup(self, event):
         if self._popup:
             if event.get_keyval()[1] == Gdk.KEY_Escape:
                 app.close_window(GtkLayerShell.get_namespace(self))
-
-    @GObject.Property
-    def is_open(self) -> bool:
-        return self._is_open
-    
-    @is_open.setter
-    def is_open(self, value: bool) -> None:
-        self._is_open = value
-        if value:
-            self.show()
-        else:
-            self.hide()
-
-    def set_is_open(self, value: bool) -> None:
-        self.is_open = value
 
     @GObject.Property
     def child(self) -> Gtk.Widget:
@@ -105,9 +83,6 @@ class Window(Gtk.Window, Widget):
             self.add(value)
             self._child = value
 
-    def set_child(self, value: Gtk.Widget) -> None:
-        self.child = value
-
     @GObject.Property
     def anchor(self) -> list:
         return self._anchor
@@ -117,9 +92,6 @@ class Window(Gtk.Window, Widget):
         self._anchor = value
         for i in value:
             GtkLayerShell.set_anchor(self, ANCHOR[i], 1)
-
-    def set_anchor(self, value: list) -> None:
-        self.anchor = value
 
     @GObject.Property
     def exclusive(self) -> bool:
@@ -133,9 +105,6 @@ class Window(Gtk.Window, Widget):
         else:
             GtkLayerShell.set_exclusive_zone(self, 0)
 
-    def set_exclusive(self, value: bool) -> None:
-        self.exclusive = value
-
     @GObject.Property
     def namespace(self) -> str:
         return self._namespace
@@ -144,9 +113,6 @@ class Window(Gtk.Window, Widget):
     def namespace(self, value: str) -> None:
         self._namespace = value
         GtkLayerShell.set_namespace(self, name_space=value)
-
-    def set_namespace(self, value: str) -> None:
-        self.namespace = value
 
     @GObject.Property
     def layer(self) -> str:
@@ -157,9 +123,6 @@ class Window(Gtk.Window, Widget):
         self._layer = value
         GtkLayerShell.set_layer(self, LAYER[value])
 
-    def set_layer(self, value: str) -> None:
-        self.layer = value
-
     @GObject.Property
     def kb_mode(self) -> str:
         return self._kb_mode
@@ -169,9 +132,6 @@ class Window(Gtk.Window, Widget):
         self._kb_mode = value
         GtkLayerShell.set_keyboard_mode(self, KB_MODE[value])
 
-    def set_kb_mode(self, value: str) -> None:
-        self.kb_mode = value
-
     @GObject.Property
     def popup(self) -> bool:
         return self._popup
@@ -179,9 +139,6 @@ class Window(Gtk.Window, Widget):
     @popup.setter
     def popup(self, value: bool) -> None:
         self._popup = value
-
-    def set_popup(self, value: bool) -> None:
-        self.popup = value
 
     @GObject.Property
     def monitor(self) -> int:
@@ -193,10 +150,7 @@ class Window(Gtk.Window, Widget):
             return
         gdkmonitor = Gdk.Display.get_default().get_monitor(value)
         if gdkmonitor is None:
-            print(f'No such monitor with id: {value}')
+            print(f"No such monitor with id: {value}")
             return
         GtkLayerShell.set_monitor(self, gdkmonitor)
         self._monitor = value
-
-    def set_monitor(self, value: int) -> None:
-        self.monitor = value

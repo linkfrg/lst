@@ -1,5 +1,5 @@
 from gi.repository import GObject, NM, GLib
-from lst.services.base_service import BaseService
+from lst.base_service import BaseService
 
 STATE = {
     NM.DeviceState.UNKNOWN: "unknown",

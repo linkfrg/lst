@@ -2,7 +2,7 @@ from lst.utils import load_interface_xml
 from lst.dbus import DbusService, DbusClient
 from gi.repository import Gio, GLib, GObject, DbusmenuGtk3, GdkPixbuf
 from typing import Union
-from lst.services.base_service import BaseService
+from lst.base_service import BaseService
 
 
 class SystemTrayItem(BaseService):
@@ -208,10 +208,12 @@ class SystemTrayService(BaseService):
         item.connect("removed", lambda x: self.__remove_item(bus_name))
         self._items[bus_name] = item
         self.emit("added", item)
+        self.notify('items')
 
     def __remove_item(self, bus_name: str) -> None:
         item = self._items.pop(bus_name)
         self.emit("removed", item)
+        self.notify('items')
 
 
 system_tray = SystemTrayService()

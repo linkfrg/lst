@@ -1,5 +1,6 @@
 from gi.repository import Gtk, GObject
-from lst.services.base_service import BaseService
+from lst.base_service import Binding
+from typing import Any
 
 ALIGN = {
     "start": Gtk.Align.START,
@@ -10,7 +11,7 @@ ALIGN = {
 }
 
 
-class Widget(Gtk.Widget, BaseService):
+class Widget(Gtk.Widget):
     gproperties = __gproperties__ = {}
 
     def __init__(
@@ -20,31 +21,34 @@ class Widget(Gtk.Widget, BaseService):
         halign: str = "fill",
         vexpand: bool = False,
         hexpand: bool = False,
-        tooltip: str = None,
+        tooltip_text: str = None,
         style: str = None,
         sensitive: bool = True,
         visible: bool = True,
-        connections: list = [],
+        width_request: int = 2,
+        height_request: int = 2,
+        **kwargs
     ):
-        Gtk.Widget.__init__(self)
-        BaseService.__init__(self)
+        super().__init__()
 
         self._class_name = None
         self._style = None
         self._css_provider = None
 
-        self.set_class_name(class_name)
-        self.set_valign(valign)
-        self.set_halign(halign)
-        self.set_vexpand(vexpand)
-        self.set_hexpand(hexpand)
-        self.set_tooltip_text(tooltip)
-        self.set_style(style)
-        self.set_sensitive(sensitive)
-        self.set_visible(visible)
+        self.class_name = class_name
+        self.valign = valign
+        self.halign = halign
+        self.vexpand = vexpand
+        self.hexpand = hexpand
+        self.tooltip_text = tooltip_text
+        self.style = style
+        self.sensitive = sensitive
+        self.visible = visible
+        self.width_request = width_request
+        self.height_request = height_request
 
-        for i in connections:
-            self.connect_to_gobject(*i)
+        for key in kwargs.keys():
+            self.set_property(key, kwargs[key])
 
     @GObject.property
     def class_name(self) -> str:
@@ -61,9 +65,6 @@ class Widget(Gtk.Widget, BaseService):
                 style_context.add_class(name)
 
             self._class_name = value
-
-    def set_class_name(self, value: str) -> None:
-        self.class_name = value
 
     def add_class_name(self, value: str) -> None:
         style_context = self.get_style_context()
@@ -94,27 +95,46 @@ class Widget(Gtk.Widget, BaseService):
             self._css_provider = css_provider
             self._style = value
 
-    def set_style(self, value: str) -> None:
-        self.style = value
+    def set_property(self, property_name: str, value: Any) -> None:
+        if value is None:
+            return
+        if property_name == "valign" or property_name == "halign":
+            super().set_property(property_name, ALIGN[value])
+        elif isinstance(value, Binding):
+            self.bind_property(value.target, value.target_property, property_name, value.transform)
+        else:
+            super().set_property(property_name, value)
 
-    def set_valign(self, value: str) -> None:
-        self.set_property("valign", ALIGN[value])
+    def __getattribute__(self, name: str) -> Any:
+        if name.startswith("set_") and name != "set_property":
+            property_name = name.replace('set_', '')
+            if self.find_property(property_name):
+                return lambda value: self.set_property(property_name, value)
+        return super().__getattribute__(name)
 
-    def set_halign(self, value: str) -> None:
-        self.set_property("halign", ALIGN[value])
+    def __setattr__(self, name: str, value: Any) -> None:
+        if self.find_property(name):
+            self.set_property(name, value)
+        else:
+            super().__setattr__(name, value)
+    
+    def __getattr__(self, name: str) -> Any:
+        if self.find_property(name):
+            return self.get_property(name)
+        else:
+            super().__getattribute__(name)
 
-    def set_vexpand(self, value: bool) -> None:
-        self.set_property("vexpand", value)
+    def bind_property(self, target: GObject.Object, target_property: str, source_property: str, transform: callable = None) -> None:
+        def callback(*args):
+            value = target.get_property(target_property.replace('-', '_'))
+            if transform:
+                value = transform(value)
+            self.set_property(source_property, value)
 
-    def set_hexpand(self, value: bool) -> None:
-        self.set_property("hexpand", value)
+        target.connect(f"notify::{target_property.replace('_', '-')}", callback)
+        callback()
 
-    def set_tooltip_text(self, value: str) -> None:
-        self.set_property("tooltip_text", value)
+    def bind(self, property_name: str, transform: callable = None) -> Binding:
+        return Binding(self, property_name, transform)
 
-    def set_sensitive(self, value: bool) -> None:
-        self.set_property("sensitive", value)
-
-    def set_visible(self, value: bool) -> None:
-        self.set_property("visible", value)
-        
+    

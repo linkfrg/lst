@@ -124,21 +124,18 @@ class LstApp(Gtk.Application):
     def open_window(self, window_name: str) -> None:
         window = self.get_window(window_name)
         if window:
-            window.is_open = True
+            window.visible = True
 
     def close_window(self, window_name: str) -> None:
         window = self.get_window(window_name)
         if window:
-            window.is_open = False
+            window.visible = False
 
     def toggle_window(self, window_name: str) -> None:
         window = self.get_window(window_name)
         if window:
-            if window.is_open:
-                window.is_open = False
-            else:
-                window.is_open = True
-            return window.is_open
+            window.visible = not window.visible
+            return window.visible
 
     def add_window(self, window_name: str, window: Gtk.Window) -> None:
         self._windows[window_name] = window

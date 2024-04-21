@@ -1,9 +1,10 @@
 import shutil
 import os
 import requests
+import threading
 from lst.dbus import DbusClient
 from gi.repository import GObject, GLib
-from lst.services.base_service import BaseService
+from lst.base_service import BaseService
 
 ART_URL_CACHE_DIR = f"{GLib.get_user_cache_dir()}/lst/art_url"
 
@@ -43,15 +44,13 @@ class MprisPlayer(BaseService):
         self.__cache_art_url()
 
     def __sync(self, *args):
-        metadata = args[1].unpack().get("Metadata", None)
-        if metadata:
-            if metadata.get("mpris:artUrl", None):
-                self.__cache_art_url()
+        if self.metadata.get("mpris:artUrl", None):
+            self.__cache_art_url()
         self.emit("changed")
-        self.notify_all(without="position")
+        self.notify_all()
 
     def __cache_art_url(self) -> None:
-        if self.metadata:
+        def callback():
             art_url = self.metadata.get("mpris:artUrl", None)
             if art_url:
                 if art_url.startswith("file://"):
@@ -72,6 +71,8 @@ class MprisPlayer(BaseService):
                         else:
                             print("Failed to download the file.")
                 self._art_url = result
+                self.notify('art_url')
+        threading.Thread(target=callback).start()
 
     def __sync_position(self) -> None:
         position = self.__player_proxy.get_dbus_property("Position")
@@ -110,7 +111,11 @@ class MprisPlayer(BaseService):
 
     @GObject.Property
     def metadata(self) -> dict:
-        return self.__player_proxy.get_dbus_property("Metadata")
+        metadata = self.__player_proxy.get_dbus_property("Metadata")
+        if metadata:
+            return metadata
+        else:
+            return {}
 
     @GObject.Property
     def track_id(self) -> str:

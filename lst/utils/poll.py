@@ -1,4 +1,4 @@
-from lst.services.base_service import BaseService
+from lst.base_service import BaseService
 from gi.repository import GLib, GObject
 
 

@@ -1,154 +1,129 @@
 import threading
 import pulsectl
 from gi.repository import GObject
-from lst.services.base_service import BaseService
+from lst.base_service import BaseService
+from typing import List
 
 PULSE = pulsectl.Pulse("lst-audio-service", threading_lock=True)
 PULSE_MONITOR = pulsectl.Pulse("lst-audio-service-monitor", threading_lock=True)
 
 
-class Sink(BaseService):
-    def __init__(self, sink):
+class Device(BaseService):
+    def __init__(self, device):
         super().__init__()
-        self._sink = sink
+        self._device = device
 
     @GObject.Property
-    def sink(self) -> pulsectl.PulseSinkInfo:
-        return self._sink
+    def device(self):
+        pass
+
+    @GObject.Property
+    def name(self) -> str:
+        return self.device.name
 
     @GObject.Property
     def description(self) -> str:
-        return self.sink.description
+        return self.device.description
 
     @GObject.Property
     def index(self) -> int:
-        return self.sink.index
+        return self.device.index
 
     @GObject.Property
     def is_muted(self) -> bool:
-        return PULSE.get_sink_by_name(self.name).mute
-    
+        return self.device.mute
+
+    @GObject.Property
+    def is_default(self) -> bool:
+        pass
+
+    @GObject.Property
+    def volume(self) -> int:
+        if self.is_muted:
+            return 0
+        else:
+            return round(self.device.volume.value_flat * 100)
+
+    @GObject.Property
+    def icon_name(self) -> str:
+        if self.is_muted:
+            return "muted"
+        elif self.volume > 67:
+            return "high"
+        elif self.volume > 33:
+            return "medium"
+        else:
+            return "low"
+
+    def set_volume(self, value: int) -> None:
+        PULSE.volume_set_all_chans(self._device, value / 100)
+
+    def mute(self) -> None:
+        PULSE.mute(self._device, True)
+
+    def unmute(self) -> None:
+        PULSE.mute(self._device, False)
+
+    def toggle_mute(self) -> None:
+        if self.is_muted:
+            self.unmute()
+        else:
+            self.mute()
+
+
+class Sink(Device):
+    def __init__(self, sink: pulsectl.PulseSinkInfo):
+        super().__init__(device=sink)
+
+    @GObject.Property
+    def device(self) -> pulsectl.PulseSinkInfo:
+        return PULSE.get_sink_by_name(self._device.name)
+
     @GObject.Property
     def is_default(self) -> bool:
         return PULSE.server_info().default_sink_name == self.name
 
     @GObject.Property
-    def name(self) -> str:
-        return self.sink.name
-
-    @GObject.Property
-    def volume(self) -> int:
-        if self.is_muted:
-            return 0
-        else:
-            return round(PULSE.get_sink_by_name(self.name).volume.value_flat * 100)
-
-    def set_volume(self, value: int) -> None:
-        PULSE.volume_set_all_chans(self.sink, value / 100)
-
-    def mute(self) -> None:
-        PULSE.mute(self.sink, True)
-
-    def unmute(self) -> None:
-        PULSE.mute(self.sink, False)
-
-    def toggle_mute(self) -> None:
-        if self.is_muted:
-            self.unmute()
-        else:
-            self.mute()
-
-    @GObject.Property
     def icon_name(self) -> str:
         template = "audio-volume-{}-symbolic"
-        if self.is_muted:
-            return template.format("muted")
-        elif self.volume > 67:
-            return template.format("high")
-        elif self.volume > 33:
-            return template.format("medium")
-        else:
-            return template.format("low")
+        return template.format(super().icon_name)
 
 
-class Source(BaseService):
-    def __init__(self, source):
-        super().__init__()
-        self._source = source
+class Source(Device):
+    def __init__(self, source: pulsectl.PulseSourceInfo):
+        super().__init__(device=source)
 
     @GObject.Property
-    def source(self) -> pulsectl.PulseSinkInfo:
-        return self._source
+    def device(self) -> pulsectl.PulseSourceInfo:
+        return PULSE.get_source_by_name(self._device.name)
 
-    @GObject.Property
-    def description(self) -> str:
-        return self.source.description
-
-    @GObject.Property
-    def index(self) -> int:
-        return self.source.index
-
-    @GObject.Property
-    def is_muted(self) -> bool:
-        return PULSE.get_source_by_name(self.name).mute
-    
     @GObject.Property
     def is_default(self) -> bool:
         return PULSE.server_info().default_source_name == self.name
 
     @GObject.Property
-    def name(self) -> str:
-        return self.source.name
-
-    @GObject.Property
-    def volume(self) -> int:
-        if self.is_muted:
-            return 0
-        else:
-            return round(PULSE.get_source_by_name(self.name).volume.value_flat * 100)
-
-    def set_volume(self, value: int) -> None:
-        PULSE.volume_set_all_chans(self.source, value / 100)
-
-    def mute(self) -> None:
-        PULSE.mute(self.source, True)
-
-    def unmute(self) -> None:
-        PULSE.mute(self.source, False)
-
-    def toggle_mute(self) -> None:
-        if self.is_muted:
-            self.unmute()
-        else:
-            self.mute()
-
-    @GObject.Property
     def icon_name(self) -> str:
         template = "microphone-sensitivity-{}-symbolic"
-        if self.is_muted:
-            return template.format("muted")
-        elif self.volume > 67:
-            return template.format("high")
-        elif self.volume > 33:
-            return template.format("medium")
-        else:
-            return template.format("low")
+        return template.format(super().icon_name)
+
 
 class DefaultSink(Sink):
     def __init__(self):
         self.update()
-        super().__init__(sink=self.sink)
+        super().__init__(sink=self._device)
 
     def update(self) -> None:
-        self._sink = PULSE.get_sink_by_name(PULSE.server_info().default_sink_name)
+        self._device = PULSE.get_sink_by_name(PULSE.server_info().default_sink_name)
+        self.notify_all()
+
 
 class DefaultSource(Source):
     def __init__(self):
         self.update()
-        super().__init__(source=self.source)
+        super().__init__(source=self._device)
 
     def update(self) -> None:
-        self._source = PULSE.get_source_by_name(PULSE.server_info().default_source_name)
+        self._device = PULSE.get_source_by_name(PULSE.server_info().default_source_name)
         self.notify_all()
 
 
@@ -193,31 +168,28 @@ class AudioService(BaseService):
                 self.__update_sources_list()
                 self.notify_all()
                 self.emit("devices_changed")
-            
 
     @GObject.Property
-    def sinks(self) -> list:
+    def sinks(self) -> List[Sink]:
         return self._sinks
 
     @GObject.Property
-    def sources(self) -> list:
+    def sources(self) -> List[Source]:
         return self._sources
 
     @GObject.Property
     def default_sink(self) -> DefaultSink:
         return self._default_sink
 
-    @default_sink.setter
-    def default_sink(self, value: Sink) -> None:
-        PULSE.sink_default_set(value.sink)
+    def set_default_sink(self, value: Sink) -> None:
+        PULSE.sink_default_set(value.device)
 
     @GObject.Property
     def default_source(self) -> DefaultSource:
         return self._default_source
 
-    @default_source.setter
-    def default_source(self, value: Source) -> None:
-        PULSE.source_default_set(value.source)
+    def set_default_source(self, value: Source) -> None:
+        PULSE.source_default_set(value.device)
 
     def __update_sink_list(self) -> None:
         self._sinks = []

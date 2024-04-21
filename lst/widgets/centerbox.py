@@ -44,9 +44,6 @@ class CenterBox(Gtk.Box, Widget):
         self.pack_start(widget, True, True, 0)
         self._start_widget = widget
 
-    def set_start_widget(self, widget: Gtk.Widget) -> None:
-        self.start_widget = widget
-
     @GObject.Property
     def center_widget(self) -> Gtk.Widget:
         return self._center_widget
@@ -59,9 +56,6 @@ class CenterBox(Gtk.Box, Widget):
         super().set_center_widget(widget)
         self._center_widget = widget
 
-    def set_center_widget(self, widget: Gtk.Widget) -> None:
-        self.center_widget = widget
-
     @GObject.Property
     def end_widget(self) -> Gtk.Widget:
         return self._end_widget
@@ -73,6 +67,3 @@ class CenterBox(Gtk.Box, Widget):
             
         self.pack_end(widget, True, True, 0)
         self._end_widget = widget
-
-    def set_end_widget(self, widget: Gtk.Widget) -> None:
-        self.end_widget = widget

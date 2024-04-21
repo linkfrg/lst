@@ -6,3 +6,4 @@ from lst.utils.poll import Poll
 from lst.utils.split_text_by_words import split_text_by_words
 from lst.utils.cut_str import cut_str
 from lst.utils.format_seconds import format_seconds
+from lst.utils.get_monitor_geometry import get_monitor_geometry

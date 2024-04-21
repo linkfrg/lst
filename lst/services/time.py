@@ -1,6 +1,6 @@
 from gi.repository import GObject, GLib
 from datetime import datetime
-from lst.services.base_service import BaseService
+from lst.base_service import BaseService
 
 
 class TimeService(BaseService):

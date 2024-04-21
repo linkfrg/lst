@@ -18,8 +18,8 @@ class Entry(Gtk.Entry, Widget):
         self._on_accept = None
         self._on_change = None
 
-        self.set_on_accept(on_accept)
-        self.set_on_change(on_change)
+        self.on_accept = on_accept
+        self.on_change = on_change
 
         if placeholder:
             self.set_placeholder_text(placeholder)
@@ -38,9 +38,6 @@ class Entry(Gtk.Entry, Widget):
     def on_accept(self, value: callable) -> None:
         self._on_accept = value
 
-    def set_on_accept(self, value: callable) -> None:
-        self.on_accept = value
-
     @GObject.Property
     def on_change(self) -> callable:
         return self._on_change
@@ -48,6 +45,3 @@ class Entry(Gtk.Entry, Widget):
     @on_change.setter
     def on_change(self, value: callable) -> None:
         self._on_change = value
-
-    def set_on_change(self, value: callable) -> None:
-        self.on_change = value

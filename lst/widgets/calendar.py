@@ -17,14 +17,13 @@ class Calendar(Gtk.Calendar, Widget):
         year: int = None,
         **kwargs
     ):
-        Gtk.Calendar.__init__(
-            self,
-            no_month_change=no_month_change,
-            show_day_names=show_day_names,
-            show_details=show_details,
-            show_heading=show_heading,
-        )
+        Gtk.Calendar.__init__(self)
         Widget.__init__(self, **kwargs)
+
+        self.no_month_change = no_month_change
+        self.show_day_names = show_day_names
+        self.show_details = show_details
+        self.show_heading = show_heading
 
         if day:
             self.select_day(day)
@@ -34,3 +33,4 @@ class Calendar(Gtk.Calendar, Widget):
 
         if year:
             self.select_month(self.get_date()[1], year)
+        

@@ -1,5 +1,6 @@
 from gi.repository import Gtk, GObject
 from lst.widgets.widget import Widget
+from typing import Any
 
 ORIENTATION = {
     "h": Gtk.Orientation.HORIZONTAL,
@@ -48,6 +49,12 @@ class Scale(Gtk.Scale, Widget):
         self.max = max
         self.connect("value-changed", lambda x: self.__invoke_on_change())
 
+    def set_property(self, name: str, value: Any) -> None:
+        if name == "value_pos":
+            super().set_value_pos(VALUE_POS[value])
+        else:
+            super().set_property(name, value)
+
     @GObject.Property
     def value(self) -> float:
         return self.get_value()
@@ -56,9 +63,6 @@ class Scale(Gtk.Scale, Widget):
     def value(self, value: float) -> None:
         if not self._dragging:
             self._adjustment.set_value(value)
-
-    def set_value(self, value: float) -> None:
-        self.value = value
 
     @GObject.Property
     def min(self) -> float:
@@ -95,9 +99,6 @@ class Scale(Gtk.Scale, Widget):
     @step.setter
     def step(self, value: float) -> None:
         self._adjustment.props.step_increment = value
-
-    def set_value_pos(self, value: str) -> None:
-        return super().set_value_pos(VALUE_POS[value])
 
     def do_button_press_event(self, event):
         self._dragging = True

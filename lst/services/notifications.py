@@ -3,7 +3,7 @@ import os
 from lst.dbus import DbusService
 from gi.repository import GLib, GObject, GdkPixbuf
 from lst.utils import load_interface_xml, read_json, write_json
-from lst.services.base_service import BaseService
+from lst.base_service import BaseService
 
 NOTIFICATIONS_CACHE_DIR = f"{GLib.get_user_cache_dir()}/lst/notifications"
 NOTIFICATIONS_CACHE_FILE = f"{NOTIFICATIONS_CACHE_DIR}/notifications.json"
@@ -296,9 +296,10 @@ class NotificationService(BaseService):
         self.notify('notifications')
 
     def __dismiss_popup(self, notification: Notification) -> None:
-        self._popups.pop(notification.id)
-        self.emit("dismissed", notification)
-        self.notify('popups')
+        if self._popups.get(notification.id, None):
+            self._popups.pop(notification.id)
+            self.emit("dismissed", notification)
+            self.notify('popups')
 
     def __invoke_action(self, notification: Notification, action: str) -> None:
         self.__dbus.emit_signal(
@@ -307,6 +308,7 @@ class NotificationService(BaseService):
 
     def __sync(self) -> None:
         data = {
+            "id": self._id,
             "notifications": [n.json for n in self.notifications],
             "dnd": self._dnd,
         }
@@ -329,11 +331,7 @@ class NotificationService(BaseService):
                 notification = Notification(**n, popup=False)
                 self.__add_notification(notification)
 
-            self._id = (
-                log_file["notifications"][0]["id"]
-                if log_file.get("notifications", None)
-                else 0
-            )
+            self._id = log_file.get("id", 0)
             self._dnd = log_file.get("dnd", False)
         except Exception:
             print("Notification history file is corrupted! Cleaning...")

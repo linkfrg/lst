@@ -20,7 +20,6 @@ class EventBox(Gtk.EventBox, Widget):
         Gtk.EventBox.__init__(self)
         Widget.__init__(self, **kwargs)
 
-        self._child = None
         self._on_click = None
         self._on_right_click = None
         self._on_middle_click = None
@@ -40,145 +39,99 @@ class EventBox(Gtk.EventBox, Widget):
 
         self.add_events(Gdk.EventMask.SCROLL_MASK)
 
-        if on_hover:
-            self.connect(
-                "enter-notify-event", lambda x, event: self.on_hover(self, event)
-            )
+        self.connect(
+            "enter-notify-event",
+            lambda x, event: self.on_hover(self, event) if self.on_hover else None,
+        )
 
-        if on_hover_lost:
-            self.connect(
-                "leave-notify-event", lambda x, event: self.on_hover_lost(self, event)
-            )
+        self.connect(
+            "leave-notify-event",
+            lambda x, event: self.on_hover_lost(self, event)
+            if self.on_hover_lost
+            else None,
+        )
 
-        if on_click:
-            self.connect(
-                "button-press-event",
-                lambda x, event: self.on_click(self, event)
-                if event.button == 1
-                else None,
-            )
+        self.connect("button-press-event", self.__on_click)
+        self.connect("scroll-event", self.__on_scroll)
 
-        if on_right_click:
-            self.connect(
-                "button-press-event",
-                lambda x, event: self.on_right_click(self, event)
-                if event.button == 2
-                else None,
-            )
+    def __on_click(self, x, event) -> None:
+        if event.button == 1 and self.on_click:
+            self.on_click(self, event)
+        elif event.button == 2 and self.on_right_click:
+            self.on_right_click(self, event)
+        elif event.button == 3 and self.on_middle_click:
+            self.on_middle_click(self, event)
 
-        if on_middle_click:
-            self.connect(
-                "button-press-event",
-                lambda x, event: self.on_middle_click(self, event)
-                if event.button == 3
-                else None,
-            )
-
-        if on_scroll_up:
-            self.connect(
-                "scroll-event",
-                lambda x, event: self.on_scroll_up(self, event)
-                if event.direction == Gdk.ScrollDirection.UP
-                else None,
-            )
-
-        if on_scroll_down:
-            self.connect(
-                "scroll-event",
-                lambda x, event: self.on_scroll_down(self, event)
-                if event.direction == Gdk.ScrollDirection.DOWN
-                else None,
-            )
+    def __on_scroll(self, x, event):
+        if event.direction == Gdk.ScrollDirection.UP and self.on_scroll_up:
+            self.on_scroll_up(self, event)
+        elif event.direction == Gdk.ScrollDirection.DOWN and self.on_scroll_down:
+            self.on_scroll_down(self, event)
 
     @GObject.Property
     def child(self) -> Gtk.Widget:
-        return self._child
+        if self.get_children() != []:
+            return self.get_children()[0]
+
+    @child.setter
+    def child(self, child: Gtk.Widget) -> None:
+        if self.get_children() != []:
+            self.remove(self.get_children()[0])
+        if child:
+            self.add(child)
 
     @GObject.Property
     def on_click(self) -> callable:
         return self._on_click
 
-    @GObject.Property
-    def on_right_click(self) -> callable:
-        return self._on_right_click
-
-    @GObject.Property
-    def on_middle_click(self) -> callable:
-        return self._on_middle_click
-
-    @GObject.Property
-    def on_hover(self) -> callable:
-        return self._on_hover
-
-    @GObject.Property
-    def on_hover_lost(self) -> callable:
-        return self._on_hover_lost
-
-    @GObject.Property
-    def on_scroll_up(self) -> callable:
-        return self._on_scroll_up
-
-    @GObject.Property
-    def on_scroll_down(self) -> callable:
-        return self._on_scroll_down
-
-    @child.setter
-    def child(self, child: Gtk.Widget) -> None:
-        if child:
-            if self.get_children() != []:
-                self.remove(self.get_children()[0])
-            self.add(child)
-            self.show()
-            self._child = child
-
     @on_click.setter
     def on_click(self, on_click: callable) -> None:
         self._on_click = on_click
+
+    @GObject.Property
+    def on_right_click(self) -> callable:
+        return self._on_right_click
 
     @on_right_click.setter
     def on_right_click(self, on_right_click: callable) -> None:
         self._on_right_click = on_right_click
 
+    @GObject.Property
+    def on_middle_click(self) -> callable:
+        return self._on_middle_click
+
     @on_middle_click.setter
     def on_middle_click(self, on_middle_click: callable) -> None:
         self._on_middle_click = on_middle_click
+
+    @GObject.Property
+    def on_hover(self) -> callable:
+        return self._on_hover
 
     @on_hover.setter
     def on_hover(self, on_hover: callable) -> None:
         self._on_hover = on_hover
 
+    @GObject.Property
+    def on_hover_lost(self) -> callable:
+        return self._on_hover_lost
+
     @on_hover_lost.setter
     def on_hover_lost(self, on_hover_lost: callable) -> None:
         self._on_hover_lost = on_hover_lost
+
+    @GObject.Property
+    def on_scroll_up(self) -> callable:
+        return self._on_scroll_up
 
     @on_scroll_up.setter
     def on_scroll_up(self, on_scroll_up: callable) -> None:
         self._on_scroll_up = on_scroll_up
 
+    @GObject.Property
+    def on_scroll_down(self) -> callable:
+        return self._on_scroll_down
+
     @on_scroll_down.setter
     def on_scroll_down(self, on_scroll_down: callable) -> None:
         self._on_scroll_down = on_scroll_down
-
-    def set_on_click(self, on_click: callable) -> None:
-        self.on_click = on_click
-
-    def set_on_right_click(self, on_right_click: callable) -> None:
-        self.on_right_click = on_right_click
-
-    def set_on_middle_click(self, on_middle_click: callable) -> None:
-        self.on_middle_click = on_middle_click
-
-    def set_on_hover(self, on_hover: callable) -> None:
-        self.on_hover = on_hover
-
-    def set_on_hover_lost(self, on_hover_lost: callable) -> None:
-        self.on_hover_lost = on_hover_lost
-
-    def set_on_scroll_up(self, on_scroll_up: callable) -> None:
-        self.on_scroll_up = on_scroll_up
-
-    def set_on_scroll_down(self, on_scroll_down: callable) -> None:
-        self.on_scroll_down = on_scroll_down
-
-    def set_child(self, child: Gtk.Widget) -> None:
-        self.child = child

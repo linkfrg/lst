@@ -14,19 +14,21 @@ class Switch(Gtk.Switch, Widget):
     ):
         Gtk.Switch.__init__(self)
         Widget.__init__(self, **kwargs)
-        self._on_activate = on_activate
-        self._on_deactivate = on_deactivate
+        self._on_activate = None
+        self._on_deactivate = None
+        self.on_activate = on_activate
+        self.on_deactivate = on_deactivate
 
-        self.set_state(state)
-        self.connect("state-set", lambda *args: self.__activate_callback())
+        self.state = state
+        self.connect("state-set", lambda *args: self.__callback())
 
-    def __activate_callback(self) -> None:
-        if self.get_state():
-            if self.on_deactivate:
-                self.on_deactivate()
+    def __callback(self) -> None:
+        if self.state:
+            if self._on_deactivate:
+                self._on_deactivate(self)
         else:
-            if self.on_activate:
-                self.on_activate()
+            if self._on_activate:
+                self._on_activate(self)
 
     @GObject.Property
     def on_activate(self) -> callable:

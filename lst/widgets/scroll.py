@@ -4,7 +4,7 @@ from lst.widgets.widget import Widget
 class Scroll(Gtk.ScrolledWindow, Widget):
     __gproperties__ = {**Widget.gproperties}
 
-    def __init__(self, child: Gtk.Widget, **kwargs):
+    def __init__(self, child: Gtk.Widget = None, **kwargs):
         
         Gtk.ScrolledWindow.__init__(self)
         Widget.__init__(self, **kwargs)
@@ -14,17 +14,13 @@ class Scroll(Gtk.ScrolledWindow, Widget):
         self.set_child(child)
 
     @GObject.Property
-    def child(self) -> list:
-        return self.get_children()
+    def child(self) -> Gtk.Widget:
+        if self.get_children() != []:
+            return self.get_children()[0]
 
     @child.setter
     def child(self, child: Gtk.Widget) -> None:
+        if self.get_children() != []:
+            self.remove(self.get_children()[0])
         if child:
-            if self.get_children() != []:
-                self.remove(self.get_children()[0])
             self.add(child)
-            self.show()
-            self._child = child
-
-    def set_child(self, child: list) -> None:
-        self.child = child
