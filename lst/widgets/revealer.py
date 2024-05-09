@@ -1,5 +1,5 @@
 from gi.repository import Gtk, GObject
-from lst.widgets.widget import Widget
+from lst.base_widget import BaseWidget
 from typing import Any
 
 
@@ -14,22 +14,37 @@ TRANSITION_TYPE = {
 }
 
 
-class Revealer(Gtk.Revealer, Widget):
-    __gproperties__ = {**Widget.gproperties}
+class Revealer(Gtk.Revealer, BaseWidget):
+    """
+    Bases: `Gtk.Revealer <https://lazka.github.io/pgi-docs/#Gtk-3.0/classes/Revealer.html>`_, :class:`~lst.base_widget.BaseWidget`.
+    
+    A container which animates the transition of its child from invisible to visible.
+
+    Parameters:
+        child(``Gtk.Widget``, optional): Child widget.
+        transition_type(``str``, optional): Transition type. 
+        Possible values: ``"none"``, ``"crossfade"``, ``"slideright"``, ``"slideleft"``, ``"slideup"``, ``"slidedown"``.
+    
+    .. code-block:: python
+    
+        Widget.Revealer(
+            child=Widget.Label('animation!!!'),
+            transition_type='slideright',
+            transition_duration=500,
+            reveal_child=True, # Whether child is revealed.
+        )
+    """
+    __gproperties__ = {**BaseWidget.gproperties}
 
     def __init__(
         self,
         child: Gtk.Widget = None,
-        reveal_child: bool = False,
-        transition_duration: int = 500,
         transition_type: str = "none",
         **kwargs,
     ):
         Gtk.Revealer.__init__(self)
-        Widget.__init__(self, **kwargs)
+        BaseWidget.__init__(self, **kwargs)
 
-        self.reveal_child = reveal_child
-        self.transition_duration = transition_duration
         self.transition_type = transition_type
         self.child = child
 

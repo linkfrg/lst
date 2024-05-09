@@ -1,18 +1,35 @@
 from gi.repository import Gtk, GObject
-from lst.widgets.widget import Widget
+from lst.base_widget import BaseWidget
 from typing import List
 
 
-class Menu(Gtk.Menu, Widget):
-    __gproperties__ = {**Widget.gproperties}
+class Menu(Gtk.Menu, BaseWidget):
+    """
+    Subclass of `Gtk.Menu <https://lazka.github.io/pgi-docs/#Gtk-3.0/classes/Menu.html>`_
+    
+    A drop down menu consisting of a list of :class:`~lst.widgets.Widget.MenuItem`.
+
+    Parameters:
+        child(``List[Gtk.MenuItem]``, optional): A list of :class:`~lst.widgets.Widget.MenuItem`.
+
+    .. code-block:: python
+
+        Widget.Menu(
+            child=[
+                Widget.Menuitem(child=Widget.Label("Entry 1")),
+                Widget.Menuitem(child=Widget.Label("Entry 2")),
+            ]
+        )
+    """
+    __gproperties__ = {**BaseWidget.gproperties}
 
     def __init__(
         self,
-        child: list = None,
+        child: List[Gtk.MenuItem] = None,
         **kwargs
     ):
         Gtk.Menu.__init__(self)
-        Widget.__init__(self, **kwargs)
+        BaseWidget.__init__(self, **kwargs)
 
         self.child = child
 

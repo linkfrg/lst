@@ -1,25 +1,40 @@
 from gi.repository import Gtk, GObject
-from lst.widgets.widget import Widget
+from lst.base_widget import BaseWidget
 
 
-class Switch(Gtk.Switch, Widget):
-    __gproperties__ = {**Widget.gproperties}
+class Switch(Gtk.Switch, BaseWidget):
+    """
+    Bases: `Gtk.Switch <https://lazka.github.io/pgi-docs/#Gtk-3.0/classes/Switch.html>`_, :class:`~lst.base_widget.BaseWidget`.
+    
+    A switch.
+
+    Parameters:
+        on_activate(``callable``, optional): Function to call on activate.
+        on_deactivate(``callable``, optional): Function to call on deactivate.
+    
+    .. code-block:: python
+    
+        Widget.Switch(
+            state=True,
+            on_activate=lambda self: print(self),
+            on_deactivate=lambda self: print(self)
+        )
+    """
+    __gproperties__ = {**BaseWidget.gproperties}
 
     def __init__(
         self,
-        state: bool = False,
         on_activate: callable = None,
         on_deactivate: callable = None,
         **kwargs,
     ):
         Gtk.Switch.__init__(self)
-        Widget.__init__(self, **kwargs)
+        BaseWidget.__init__(self, **kwargs)
         self._on_activate = None
         self._on_deactivate = None
         self.on_activate = on_activate
         self.on_deactivate = on_deactivate
 
-        self.state = state
         self.connect("state-set", lambda *args: self.__callback())
 
     def __callback(self) -> None:

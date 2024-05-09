@@ -1,6 +1,7 @@
 from lst.app import app
 from gi.repository import Gtk, GtkLayerShell, GObject, Gdk
-from lst.widgets.widget import Widget
+from lst.base_widget import BaseWidget
+from typing import List
 
 LAYER = {
     "background": GtkLayerShell.Layer.BACKGROUND,
@@ -25,15 +26,44 @@ ANCHOR = {
 }
 
 
-class Window(Gtk.Window, Widget):
-    __gproperties__ = {**Widget.gproperties}
+class Window(Gtk.Window, BaseWidget):
+    """
+    Bases: `Gtk.Window <https://lazka.github.io/pgi-docs/#Gtk-3.0/classes/Window.html>`_, :class:`~lst.base_widget.BaseWidget`.
+
+    The toplevel widget that contain everything.
+
+    Parameters:
+        namespace(``str``): Name of the window, that will be used to access from CLI and :class:`~lst.app.LstApp`. It must be unique. It is also name of the layer.
+        child(``Gtk.Widget``, optional): Child widget.
+        monitor(``int``, optional): Monitor number on which to display the window.
+        anchor(``List[str]``, optional): List of anchors.if the list is empty, the window will be located in the middle of the screen. Possible anchor values: ``"bottom"``, ``"left"``, ``"right"``, ``"top"``. 
+        exclusive(``bool``, optional): Whether the compositor should reserve space for the window.
+        layer(``str``, optional): Layer of the surface. Possible values: ``"background"``, ``"bottom"``, ``"top"``, ``"overlay"``.
+        kb_mode(``str``, optional): Whether window should receive keyboard events from the compositor. Possible values: ``"none"``, ``"exclusive"``, `"on_demand"``.
+        popup(``bool``, optional): Whether window should close on ESC. Work only if ``kb_mode`` set to ``"exclusive"`` or `"on_demand"``.
+
+    .. code-block:: python
+
+        Widget.Window(
+            namespace="example_window",
+            child=Widget.Label('heh'),
+            monitor=0,
+            anchor=["top", "right"],
+            exclusive=True,
+            layer="top",
+            kb_mode="none",
+            popup=False
+        )    
+
+    """
+    __gproperties__ = {**BaseWidget.gproperties}
 
     def __init__(
         self,
         namespace: str,
         child: Gtk.Widget = None,
         monitor: int = None,
-        anchor: list = [],
+        anchor: List[str] = [],
         exclusive: bool = False,
         layer: str = "top",
         kb_mode: str = "none",
@@ -64,7 +94,7 @@ class Window(Gtk.Window, Widget):
         app.add_window(namespace, self)
         self.connect("key-press-event", lambda x, event: self.__close_popup(event))
 
-        Widget.__init__(self, **kwargs)
+        BaseWidget.__init__(self, **kwargs)
 
     def __close_popup(self, event):
         if self._popup:
@@ -154,3 +184,8 @@ class Window(Gtk.Window, Widget):
             return
         GtkLayerShell.set_monitor(self, gdkmonitor)
         self._monitor = value
+
+    def toggle(self) -> bool:
+        self.visible = not self.visible
+        return self.visible
+    

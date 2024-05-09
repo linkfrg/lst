@@ -1,9 +1,38 @@
 from gi.repository import Gtk, Gdk, GObject
-from lst.widgets.widget import Widget
+from lst.base_widget import BaseWidget
 
 
-class EventBox(Gtk.EventBox, Widget):
-    __gproperties__ = {**Widget.gproperties}
+class EventBox(Gtk.EventBox, BaseWidget):
+    """
+    Bases: `Gtk.EventBox <https://lazka.github.io/pgi-docs/#Gtk-3.0/classes/EventBox.html>`_, :class:`~lst.base_widget.BaseWidget`.
+    
+    A container that can receive events.
+
+    Parameters:
+        child (``Gtk.Widget``, optional): The child widget.
+        on_click (``callable``, optional): The function to call on left click. 
+        on_right_click (``callable``, optional): The function to call on right click. 
+        on_middle_click (``callable``, optional): The function to call on middle click. 
+        on_hover (``callable``, optional): The function to call on hover.
+        on_hover_lost (``callable``, optional): The function to call on hover lost.
+        on_scroll_up (``callable``, optional): The function to call on scroll up.
+        on_scroll_down (``callable``, optional): The function to call on scroll down.
+
+    .. code-block:: python
+
+        Widget.EventBox(
+            child=Widget.Label('button'),
+            on_click=lambda self, event: print(self, event),
+            on_right_click=lambda self, event: print(self, event),
+            on_middle_click=lambda self, event: print(self, event),
+            on_hover=lambda self, event: print(self, event),
+            on_hover_lost=lambda self, event: print(self, event),
+            on_scroll_up=lambda self, event: print(self, event),
+            on_scroll_down=lambda self, event: print(self, event)
+        )
+
+    """
+    __gproperties__ = {**BaseWidget.gproperties}
 
     def __init__(
         self,
@@ -18,7 +47,7 @@ class EventBox(Gtk.EventBox, Widget):
         **kwargs,
     ):
         Gtk.EventBox.__init__(self)
-        Widget.__init__(self, **kwargs)
+        BaseWidget.__init__(self, **kwargs)
 
         self._on_click = None
         self._on_right_click = None

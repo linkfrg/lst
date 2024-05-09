@@ -1,5 +1,5 @@
 from gi.repository import Gtk, GObject
-from lst.widgets.widget import Widget
+from lst.base_widget import BaseWidget
 from typing import Any
 
 ORIENTATION = {
@@ -15,8 +15,37 @@ VALUE_POS = {
 }
 
 
-class Scale(Gtk.Scale, Widget):
-    __gproperties__ = {**Widget.gproperties}
+class Scale(Gtk.Scale, BaseWidget):
+    """
+    Bases: `Gtk.Scale <https://lazka.github.io/pgi-docs/#Gtk-3.0/classes/Scale.html>`_, :class:`~lst.base_widget.BaseWidget`.
+    
+    A slider.
+
+    Parameters:
+        orientation (``str``, optional): Orientation of the widget. Possible values: ``"h"``, ``"v"``.
+        min(``float``, optional): Minimum value.
+        max(``float``, optional): Maximum value.
+        step(``float``, optional): Step increment.
+        value(``float``, optional): Current value.
+        on_change(``callable``, optional): Function to call on value change.
+        draw_value(``int``, optional): Whether current value is displayed
+        value_pos(``str``, optional). Position in which the current value is displayed. Work only if ``draw_value`` set to ``True``.
+        Possible values: ``"left"``, `"right"``, `"top"``, `"bottom"``.
+    
+    .. code-block:: python
+        
+        Widget.Scale(
+            orientation='h',
+            min=0,
+            max=100,
+            step=1,
+            value=20,
+            on_change=lambda self: print(self.value),
+            draw_value=True,
+            value_pos='top'
+        )
+    """
+    __gproperties__ = {**BaseWidget.gproperties}
 
     def __init__(
         self,
@@ -30,30 +59,30 @@ class Scale(Gtk.Scale, Widget):
         value_pos: str = "top",
         **kwargs,
     ):
-        self._dragging = False
-        self._adjustment = Gtk.Adjustment(0, 0, 100, 1, 1, 0)
-        Gtk.Scale.__init__(
-            self,
-            orientation=ORIENTATION[orientation],
-            adjustment=self._adjustment,
-        )
-        Widget.__init__(self, **kwargs)
+        self._adjustment = Gtk.Adjustment(0, 0, 0, 0, 0, 0)
+        Gtk.Scale.__init__(self, adjustment=self._adjustment)
+        BaseWidget.__init__(self, **kwargs)
 
-        self.set_value_pos(value_pos)
-        self.set_draw_value(draw_value)
+        self._dragging = False
         self._on_change = None
-        self.on_change = on_change
-        self.step = step
-        self.value = value
+
+        self.orientation = orientation
         self.min = min
         self.max = max
+        self.step = step
+        self.value = value
+        self.on_change = on_change
+        self.draw_value = draw_value
+        self.value_pos = value_pos
         self.connect("value-changed", lambda x: self.__invoke_on_change())
 
-    def set_property(self, name: str, value: Any) -> None:
-        if name == "value_pos":
+    def set_property(self, property_name: str, value: Any) -> None:
+        if property_name == "value_pos":
             super().set_value_pos(VALUE_POS[value])
+        elif property_name == "orientation":
+            super().set_property("orientation", ORIENTATION[value])
         else:
-            super().set_property(name, value)
+            super().set_property(property_name, value)
 
     @GObject.Property
     def value(self) -> float:

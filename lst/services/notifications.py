@@ -204,7 +204,9 @@ class NotificationService(BaseService):
         )
 
     def CloseNotification(self, invocation, id: int) -> None:
-        self.get_notification(id).close()
+        notification = self.get_notification(id)
+        if notification:
+            notification.close()
 
     def get_notification(self, id: int) -> Notification:
         return self._notifications.get(id, None)

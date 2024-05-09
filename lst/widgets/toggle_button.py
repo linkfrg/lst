@@ -2,6 +2,24 @@ from gi.repository import GObject, Gtk
 from lst.widgets.button import Button
 
 class ToggleButton(Button):
+    """
+    Bases: :class:`~lst.widgets.Widget.Button`
+    
+    Parameters:
+        child(``Gtk.Widget``, optional): Child widget.
+        active(``bool``, optional): If ``True`` widget will have ``active`` css class name.
+        on_activate(``callable``, optional): Function to call on activate.
+        on_deactivate(``callable``, optional): Function to call on deactivate.
+    
+    .. code-block:: python
+
+        Widget.ToggleButton(
+            child=Widget.Label(),
+            active=True,
+            on_activate=lambda self: print(self),
+            on_deactivate=lambda self: print(self),
+        )
+    """
     def __init__(
         self,
         child: Gtk.Widget = None,

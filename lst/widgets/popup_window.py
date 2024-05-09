@@ -5,6 +5,24 @@ from lst.widgets.revealer import Revealer
 
 
 class PopupWindow(Window):
+    """
+    Bases: :class:`~lst.widgets.Widget.Window`
+    
+    A window that opens and closes with animation.
+    
+    Parameters:
+        child(``Gtk.Widget``, optional): Child widget.
+        transition_type(``str``, optional): Type of animation. Possible values: ``"none"``, ``"crossfade"``, ``"slideright"``, ``"slideleft"``, ``"slideup"``, ``"slidedown"``.
+        reveal_child(``bool``, optional): Whether the window should reveal the child.
+    
+    .. code-block:: python
+    
+        Widget.PopupWindow(
+            child=Widget.Label('asdasfajk!!!'),
+            transition_type='slidedown',
+            reveal_child=True
+        )
+    """
     def __init__(
         self,
         child: Gtk.Widget = None,
@@ -29,3 +47,9 @@ class PopupWindow(Window):
             return self._revealer.reveal_child
         else:
             super().__getattribute__(name)
+    
+    def show(self) -> None:
+        self.visible = True
+    
+    def hide(self) -> None:
+        self.visible = False

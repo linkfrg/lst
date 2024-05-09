@@ -1,16 +1,8 @@
 import argparse
 import os
-import gi
-
-gi.require_version("Gtk", "3.0")
-gi.require_version("GtkLayerShell", "0.1")
-gi.require_version("GdkPixbuf", "2.0")
-gi.require_version("DbusmenuGtk3", "0.4")
-gi.require_version('NM', '1.0')
-gi.require_version("Gst", "1.0")
-from lst.app import app, APP_INTERFACE_NAME  # noqa: E402
-from gi.repository import Gio, GLib  # noqa: E402
-from lst.client import LstClient  # noqa: E402
+from lst.app import app, APP_INTERFACE_NAME
+from gi.repository import Gio, GLib 
+from lst.client import LstClient
 
 
 def parse_arguments():

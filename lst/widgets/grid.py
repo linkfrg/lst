@@ -1,33 +1,50 @@
 from gi.repository import Gtk, GObject
-from lst.widgets.widget import Widget
+from lst.base_widget import BaseWidget
 from typing import List
 
-class Grid(Gtk.Grid, Widget):
-    __gproperties__ = {**Widget.gproperties}
+class Grid(Gtk.Grid, BaseWidget):
+    """
+    Bases: `Gtk.Grid <https://lazka.github.io/pgi-docs/#Gtk-3.0/classes/Grid.html>`_, :class:`~lst.base_widget.BaseWidget`.
+    
+    A container which arranges its child widgets in rows and columns.
+
+    Parameters:
+        child(``List[Gtk.Widget]``, optional): The list of child widgets.
+        column_num(``int``, optional): Number of columns.
+        row_num(``int``, optional): Number of rows. Will not have effect if ``column_num`` is passed.
+    
+    .. code-block:: python
+
+        Widget.Grid(
+            child=[Widget.Label(123), Widget.Label('test')],
+            column_num=3
+        )
+    
+    .. code-block:: python
+
+        Widget.Grid(
+            child=[Widget.Label(123), Widget.Label('test')],
+            row_num=3
+        )
+
+    """
+    __gproperties__ = {**BaseWidget.gproperties}
 
     def __init__(
         self,
         child: List[Gtk.Widget] = None,
         column_num: int = None,
         row_num: int = None,
-        column_homogeneous: bool = False,
-        row_homogeneous: bool = False,
-        column_spacing: int = 0,
-        row_spacing: int = 0,
         **kwargs
     ):
         Gtk.Grid.__init__(self)
-        Widget.__init__(self, **kwargs)
+        BaseWidget.__init__(self, **kwargs)
         self._column_num = None
         self._row_num = None
 
         self.column_num = column_num
         self.row_num = row_num
         self.child = child
-        self.set_column_homogeneous(column_homogeneous)
-        self.set_row_homogeneous(row_homogeneous)
-        self.set_column_spacing(column_spacing)
-        self.set_row_spacing(row_spacing)
 
     @GObject.Property
     def column_num(self) -> int:

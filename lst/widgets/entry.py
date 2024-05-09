@@ -1,19 +1,34 @@
 from gi.repository import Gtk, GObject
-from lst.widgets.widget import Widget
+from lst.base_widget import BaseWidget
 
 
-class Entry(Gtk.Entry, Widget):
-    __gproperties__ = {**Widget.gproperties}
+class Entry(Gtk.Entry, BaseWidget):
+    """
+    Bases: `Gtk.Entry <https://lazka.github.io/pgi-docs/#Gtk-3.0/classes/Entry.html>`_, :class:`~lst.base_widget.BaseWidget`.
+
+    An input field. To make it work set ``kb_mode`` of window to ``"on_demand"`` or ``"exclusive"``.
+
+    Parameters:
+        on_accept(``callable``, optional): The function that will be called when user hits the Enter key.
+        on_change(``callable``, optional): The function that will be called when text of the widget is changed(e.g user wrote something into entry).
+
+    .. code-block:: python
+    
+        Widget.Entry(
+            on_accept=lambda self: print(self),
+            on_change=lambda self: print(self),
+        )
+    """
+    __gproperties__ = {**BaseWidget.gproperties}
 
     def __init__(
         self,
-        placeholder: str = None,
         on_accept: callable = None,
         on_change: callable = None,
         **kwargs
     ):
         Gtk.Entry.__init__(self)
-        Widget.__init__(self, **kwargs)
+        BaseWidget.__init__(self, **kwargs)
 
         self._on_accept = None
         self._on_change = None
@@ -21,14 +36,9 @@ class Entry(Gtk.Entry, Widget):
         self.on_accept = on_accept
         self.on_change = on_change
 
-        if placeholder:
-            self.set_placeholder_text(placeholder)
+        self.connect("activate", lambda x: on_accept(x) if self.on_accept else None)
 
-        if on_accept:
-            self.connect("activate", lambda x: on_accept(x))
-
-        if on_change:
-            self.connect("notify::text", lambda x, y: on_change(x))
+        self.connect("notify::text", lambda x, y: on_change(x) if self.on_change else None)
 
     @GObject.Property
     def on_accept(self) -> callable:

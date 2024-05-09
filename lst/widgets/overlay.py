@@ -1,13 +1,33 @@
 from gi.repository import Gtk, GObject
-from lst.widgets.widget import Widget
+from lst.base_widget import BaseWidget
 
 
-class Overlay(Gtk.Overlay, Widget):
-    __gproperties__ = {**Widget.gproperties}
+class Overlay(Gtk.Overlay, BaseWidget):
+    """
+    Bases: `Gtk.Overlay <https://lazka.github.io/pgi-docs/#Gtk-3.0/classes/Overlay.html>`_, :class:`~lst.base_widget.BaseWidget`.
 
-    def __init__(self, child: list = None, **kwargs):
+    A container that places its children on top of each other. 
+    
+    Parameters:
+        child(``Gtk.Widget``, optional): Child widget.
+    
+    .. code-block:: python
+    
+        Widget.Overlay(
+            child=Widget.Box(
+                child=[
+                    Widget.Label(label=1),
+                    Widget.Label(label=2),
+                    Widget.Label(label=3),
+                ]
+            )
+        )
+    """
+    __gproperties__ = {**BaseWidget.gproperties}
+
+    def __init__(self, child: Gtk.Widget = None, **kwargs):
         Gtk.Overlay.__init__(self)
-        Widget.__init__(self, **kwargs)
+        BaseWidget.__init__(self, **kwargs)
 
         self.child = child
 

@@ -1,28 +1,35 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+import os
+import sys
 
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+sys.path.insert(0, os.path.abspath(".."))
+from lst.widgets import Widget
 
-project = 'lst'
-copyright = '2024, linkfrg'
-author = 'linkfrg'
-release = '0.1'
+project = "lst"
+copyright = "2024, linkfrg"
+author = "linkfrg"
 
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon"]
 
-extensions = []
-
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
+html_theme = "sphinx_book_theme"
+html_static_path = ["_static"]
+html_title = "LST Wiki"
 
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
-html_static_path = ['_static']
+def get_widget_template(name):
+    return f"""{name}
+{'-'*len(name)}
+
+.. autoclass:: lst.widgets.Widget.{name}
+"""
+
+
+os.makedirs("widgets/generated", exist_ok=True)
+
+for name in Widget.__dict__:
+    if not name.startswith("__"):
+        with open(f"widgets/generated/{name}.rst", "w") as file:
+            file.write(get_widget_template(name))
